@@ -30,24 +30,26 @@ def softmax_loss_naive(W, X, y, reg):
   # here, it is easy to run into numeric instability. Don't forget the        #
   # regularization!                                                           #
   #############################################################################
-  train_num = X.shape[0]
-  num_classes = np.max(y) + 1
-  for i in xrange(train_num):
-      y_pred = X[i,:].dot(W)
-      y_pred = y_pred - np.max(y_pred)
-      y_label = y[i]      
-      prob = np.exp(y_pred[y_label]) / np.sum(np.exp(y_pred))
-      loss += -1*np.log(prob)
+  num_train = X.shape[0]
+  num_classes = W.shape[1]
+
+  for i in xrange(num_train):
+      scores = X[i, :].dot(W)
+      scores -= np.max(scores)
+      label = y[i]
+      prob = np.exp(scores[label]) / np.sum(np.exp(scores))
+      loss -= np.log(prob)
       for j in xrange(num_classes):
           if j != y[i]:
-              dW[:,j] += np.exp(y_pred[j])/np.sum(np.exp(y_pred)) * X[i]
+              dW[:,j] += np.exp(scores[j]) / np.sum(np.exp(scores)) * X[i]
           else:
-              dW[:,y[i]] += (-1 + np.exp(y_pred[j])/np.sum(np.exp(y_pred))) * X[i]
+              dW[:,y[i]] += (-1 + np.exp(scores[j]) / np.sum(np.exp(scores))) * X[i]
               
-  loss /= train_num
-  dW /= train_num
-  loss += 0.5*reg*np.sum(np.square(W))
-  dW += reg*W
+  loss /= num_train
+  dW /= num_train
+
+  loss += 0.5 * reg * np.sum(W**2)
+  dW += reg * W
   #############################################################################
   #                          END OF YOUR CODE                                 #
   #############################################################################
@@ -71,17 +73,17 @@ def softmax_loss_vectorized(W, X, y, reg):
   # here, it is easy to run into numeric instability. Don't forget the        #
   # regularization!                                                           #
   #############################################################################
-  score = np.dot(X, W)   # (N, C)
+  score = np.dot(X, W)
   out = np.exp(score)
-  out /= np.sum(out, axis=1, keepdims=True)   # (N, C)
+  out /= np.sum(out, axis=1, keepdims=True)
   loss -= np.sum(np.log(out[np.arange(X.shape[0]), y]))
   loss /= X.shape[0]
   loss += 0.5 * reg * np.sum(W**2)
 
   # backward
-  dout = np.copy(out)   # (N, C)
+  dout = np.copy(out)
   dout[np.arange(X.shape[0]), y] -= 1
-  dW = np.dot(X.T, dout)  # (D, C)
+  dW = np.dot(X.T, dout)
   dW /= X.shape[0]
   dW += reg * W
   #############################################################################

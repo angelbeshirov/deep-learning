@@ -54,7 +54,7 @@ def svm_loss_naive(W, X, y, reg):
   # loss is being computed. As a result you may need to modify some of the    #
   # code above to compute the gradient.                                       #
   #############################################################################
-  
+
   dW += reg * W
 
   return loss, dW
@@ -74,14 +74,14 @@ def svm_loss_vectorized(W, X, y, reg):
   # Implement a vectorized version of the structured SVM loss, storing the    #
   # result in loss.                                                           #
   #############################################################################
-  
-  c = W.shape[1]
-  r = X.shape[0]
+
+  num_train = X.shape[0]
+  rws = np.arange(num_train)
   scores = np.dot(X, W)
-  new_scores = scores[np.arange(r), y]
-  margins = np.maximum(scores - new_scores.reshape(r, 1) + 1.0, 0)
-  margins[np.arange(r), y] = 0
-  loss = np.sum(margins) / r
+  new_scores = scores[rws, y]
+  margins = np.maximum(scores - new_scores.reshape(num_train, 1) + 1.0, 0)
+  margins[rws, y] = 0
+  loss = np.sum(margins) / num_train
   loss += reg * np.sum(W * W)
 
   #############################################################################
@@ -98,13 +98,13 @@ def svm_loss_vectorized(W, X, y, reg):
   # to reuse some of the intermediate values that you used to compute the     #
   # loss.                                                                     #
   #############################################################################
-  dscores = np.zeros_like(scores)
-  dscores[margins > 0] = 1  
-  dscores[np.arange(r), y] -= np.sum(dscores, axis=1)
 
-  dW = np.dot(X.T, dscores)
-  dW /= r
+  dscores = 1 * (margins > 0)
+  dscores[rws, y] -= np.sum(dscores, axis=1)
+
+  dW = np.dot(X.T, dscores) / num_train
   dW += reg * W
+
   #############################################################################
   #                             END OF YOUR CODE                              #
   #############################################################################
